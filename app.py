@@ -1,36 +1,31 @@
-# ========================= IMPORTS =========================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from fpdf import FPDF
-from datetime import datetime
+import os
 
-# ========================= PAGE CONFIG =========================
+# ======================
+# PAGE CONFIG
+# ======================
+
 st.set_page_config(
     page_title="Ultimate AI Student System",
     layout="wide"
 )
 
-# ========================= SAMPLE DATA =========================
-data = {
-    "Name": ["Rahul", "Priya", "Aman", "Sneha", "Rohit"],
-    "Attendance": [90, 95, 60, 85, 55],
-    "Math": [88, 98, 45, 82, 40],
-    "Science": [90, 99, 50, 84, 35],
-    "English": [85, 97, 55, 81, 45]
-}
+# ======================
+# CUSTOM CSS
+# ======================
 
-df = pd.DataFrame(data)
-df["Average"] = round(
-    (df["Math"] + df["Science"] + df["English"]) / 3, 2
-)
-
-# ========================= STYLING =========================
 st.markdown("""
 <style>
 
+body{
+    background:#06002e;
+}
+
 .stApp{
-background: linear-gradient(135deg,#020024,#090979,#3a0ca3);
+background:linear-gradient(135deg,#020024,#090979,#3a0ca3);
 color:white;
 }
 
@@ -38,385 +33,375 @@ h1,h2,h3,h4,h5,h6,p,label{
 color:white !important;
 }
 
-.block{
-background: rgba(0,0,0,0.35);
-padding:20px;
-border-radius:20px;
-border:2px solid #d000ff;
-box-shadow:0 0 20px #d000ff;
-margin-bottom:20px;
-}
-
 .metric-card{
+background:linear-gradient(135deg,#00c6ff,#0072ff);
 padding:25px;
 border-radius:20px;
 text-align:center;
-color:white;
-font-weight:bold;
-box-shadow:0 0 20px rgba(255,255,255,0.2);
+box-shadow:0 0 20px #00c6ff;
+height:240px;
 }
 
-.blue{
-background:linear-gradient(135deg,#005bea,#00c6fb);
+.metric-card2{
+background:linear-gradient(135deg,#00b09b,#96c93d);
+padding:25px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 0 20px #00ffcc;
+height:240px;
 }
 
-.green{
-background:linear-gradient(135deg,#11998e,#38ef7d);
+.metric-card3{
+background:linear-gradient(135deg,#ff416c,#ff4b2b);
+padding:25px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 0 20px #ff416c;
+height:240px;
 }
 
-.red{
-background:linear-gradient(135deg,#ff512f,#dd2476);
-}
-
-.purple{
+.metric-card4{
 background:linear-gradient(135deg,#8e2de2,#ff00ff);
+padding:25px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 0 20px #ff00ff;
+height:240px;
+}
+
+.admin-card{
+background:linear-gradient(135deg,#141e30,#243b55);
+padding:20px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 0 15px #00e5ff;
+height:180px;
+}
+
+.neon-box{
+background:#05003b;
+padding:20px;
+border-radius:20px;
+border:2px solid #ff00ff;
+box-shadow:0 0 20px #ff00ff;
+margin-bottom:20px;
 }
 
 .stButton>button{
-background:linear-gradient(90deg,#0072ff,#d000ff);
+background:linear-gradient(90deg,#0072ff,#ff00ff);
 color:white;
 border:none;
-border-radius:12px;
-padding:10px 20px;
+border-radius:15px;
+padding:12px 25px;
+font-size:20px;
 font-weight:bold;
-box-shadow:0 0 15px #d000ff;
-}
-
-div[data-baseweb="input"]{
-background:#000814 !important;
-border-radius:12px !important;
-border:2px solid #d000ff !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ========================= HEADER =========================
+# ======================
+# SAMPLE DATA
+# ======================
+
+data = {
+    "Name":["Rahul","Priya","Aman","Sneha","Rohit"],
+    "Attendance":[65,95,70,88,60],
+    "Math":[55,98,45,76,40],
+    "Science":[60,96,50,80,42],
+    "English":[58,92,52,85,45]
+}
+
+df = pd.DataFrame(data)
+
+df["Average"] = (
+    df["Math"] +
+    df["Science"] +
+    df["English"]
+)/3
+
+topper = df.loc[df["Average"].idxmax()]["Name"]
+
+weak_students = len(df[df["Average"] < 60])
+
+poor_attendance = len(df[df["Attendance"] < 75])
+
+# ======================
+# TITLE
+# ======================
+
 st.markdown("""
-<h1 style='text-align:center;color:#00e5ff;text-shadow:0 0 20px #00e5ff;font-size:65px;'>
+<h1 style='text-align:center;
+font-size:70px;
+color:#00e5ff;
+text-shadow:0 0 25px #00e5ff;'>
 🔐 AI STUDENT SYSTEM
 </h1>
+""", unsafe_allow_html=True)
 
+st.markdown("""
 <h3 style='text-align:center;color:#00ffff;'>
 Smart • Secure • Intelligent
 </h3>
 """, unsafe_allow_html=True)
 
-# ========================= TOP SECTION =========================
-left, right = st.columns([1,2])
+st.write("")
 
-# ================= LEFT =================
-with left:
+# ======================
+# LOGIN SECTION
+# ======================
 
-    col1, col2 = st.columns(2)
+col1,col2,col3,col4,col5,col6 = st.columns(6)
 
-    with col1:
-        st.markdown("<div class='block'>", unsafe_allow_html=True)
-
-        st.markdown("## 📷 Face Authentication")
-        st.write("Login with your registered face")
-
-        camera = st.camera_input("Capture Face")
-
-        if camera:
-            st.success("✅ Face matched successfully")
-            st.success("✅ Access Granted")
-
-        st.button("📸 Capture & Login")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("<div class='block'>", unsafe_allow_html=True)
-
-        st.markdown("## 🔑 Manual Login")
-
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-
-        if st.button("Login"):
-            if username == "admin" and password == "admin123":
-                st.success("✅ Login Successful")
-            else:
-                st.error("❌ Wrong Username or Password")
-
-        st.info("Forgot Password? Contact Admin")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# ================= RIGHT =================
-with right:
+with col1:
 
     st.markdown("""
-    <h1 style='text-align:center;'>
-    📊 AI STUDENT SYSTEM DASHBOARD
-    </h1>
+    <div class="neon-box">
+    <h1>📷 Face Authentication</h1>
+    <p>Login with your registered face</p>
+    </div>
     """, unsafe_allow_html=True)
 
-    m1, m2, m3, m4 = st.columns(4)
+    camera = st.camera_input("Capture Face")
 
-    with m1:
-        st.markdown("""
-        <div class='metric-card blue'>
-        👨‍🎓<br>
-        Total Students<br><br>
-        <h1>5</h1>
-        </div>
-        """, unsafe_allow_html=True)
+    st.button("📸 Capture & Login")
 
-    with m2:
-        st.markdown("""
-        <div class='metric-card green'>
-        🏆<br>
-        Topper<br><br>
-        <h1>Priya</h1>
-        </div>
-        """, unsafe_allow_html=True)
+with col2:
 
-    with m3:
-        st.markdown("""
-        <div class='metric-card red'>
-        ⚠<br>
-        Weak Students<br><br>
-        <h1>2</h1>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="neon-box">
+    <h1>🔑 Login</h1>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with m4:
-        st.markdown("""
-        <div class='metric-card purple'>
-        📉<br>
-        Poor Attendance<br><br>
-        <h1>2</h1>
-        </div>
-        """, unsafe_allow_html=True)
+    username = st.text_input("Username")
 
-# ================= MIDDLE SECTION =================
-c1, c2, c3 = st.columns([1,1,2])
+    password = st.text_input("Password", type="password")
 
-# ===== Add Student =====
-with c1:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+    if st.button("Login"):
 
-    st.markdown("## ➕ Add New Student")
+        if username == "admin" and password == "admin123":
 
-    st.text_input("Student Name")
-    st.slider("Attendance (%)",0,100,80)
-    st.slider("Math Marks",0,100,70)
-    st.slider("Science Marks",0,100,70)
-    st.slider("English Marks",0,100,70)
+            st.success("✅ Login Successful")
 
-    st.button("✅ Add Student")
+        else:
 
-    st.markdown("</div>", unsafe_allow_html=True)
+            st.error("❌ Wrong Username or Password")
 
-# ===== Face Recognition =====
-with c2:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="neon-box">
+    <h3>Forgot Password?</h3>
+    <p>Contact Admin</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("## 📸 Face Recognition Attendance")
+with col3:
 
-    cam2 = st.camera_input("Capture Student Photo")
+    st.markdown(f"""
+    <div class="metric-card">
+    <h2>👨‍🎓 Total Students</h2>
+    <h1>{len(df)}</h1>
+    <h3>All Registered Students</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if cam2:
-        st.success("✅ Face detected successfully!")
-        st.success("✅ Attendance marked successfully!")
-        st.success("🎉 Student Present")
+with col4:
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="metric-card2">
+    <h2>🏆 Topper</h2>
+    <h1>{topper}</h1>
+    <h3>Highest Average Marks</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ===== Table =====
-with c3:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+with col5:
 
-    st.markdown("## 📋 Student Performance Table")
+    st.markdown(f"""
+    <div class="metric-card3">
+    <h2>⚠ Weak Students</h2>
+    <h1>{weak_students}</h1>
+    <h3>Need Improvement</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.dataframe(df, use_container_width=True)
+with col6:
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="metric-card4">
+    <h2>📉 Poor Attendance</h2>
+    <h1>{poor_attendance}</h1>
+    <h3>Attendance &lt; 75%</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ================= CHARTS =================
-g1, g2 = st.columns(2)
+st.write("")
+st.write("")
 
-# ===== Attendance Graph =====
-with g1:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+# ======================
+# SEARCH STUDENT
+# ======================
 
-    st.markdown("## 📊 Attendance Graph")
+st.markdown("""
+<div class="neon-box">
+<h2>🔍 Search Student</h2>
+</div>
+""", unsafe_allow_html=True)
 
-    fig = px.bar(
-        df,
-        x="Name",
-        y="Attendance",
-        color="Name",
-        text="Attendance"
-    )
+search = st.text_input("Enter Student Name")
 
-    fig.update_layout(
-        paper_bgcolor="#000814",
-        plot_bgcolor="#000814",
-        font_color="white"
-    )
+if search:
 
-    st.plotly_chart(fig, use_container_width=True)
+    result = df[df["Name"].str.contains(search, case=False)]
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.dataframe(result)
 
-# ===== Pie Chart =====
-with g2:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+# ======================
+# STUDENT TABLE
+# ======================
 
-    st.markdown("## 🔥 Student Marks Ratio")
+st.markdown("""
+<div class="neon-box">
+<h1>📋 Student Performance Table</h1>
+</div>
+""", unsafe_allow_html=True)
 
-    pie = px.pie(
-        df,
-        names="Name",
-        values="Average",
-        hole=0.35
-    )
+st.dataframe(df, use_container_width=True)
 
-    pie.update_layout(
-        paper_bgcolor="#000814",
-        font_color="white"
-    )
+# ======================
+# AI ANALYSIS
+# ======================
 
-    st.plotly_chart(pie, use_container_width=True)
+st.markdown("""
+<div class="neon-box">
+<h1>🤖 AI Performance Analysis</h1>
+</div>
+""", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+for i,row in df.iterrows():
 
-# ================= BOTTOM SECTION =================
-b1, b2, b3 = st.columns(3)
+    if row["Average"] >= 90:
+        st.success(f"{row['Name']} → Excellent Performance")
 
-# ===== AI Chatbot =====
-with b1:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+    elif row["Average"] >= 60:
+        st.warning(f"{row['Name']} → Needs Practice")
 
-    st.markdown("## 🤖 AI Chatbot")
-
-    question = st.text_input(
-        "Ask AI",
-        key="chatbot_input"
-    )
-
-    if st.button("Ask AI"):
-        st.success("AI Response Generated Successfully")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ===== AI Prediction =====
-with b2:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
-
-    st.markdown("## 🧠 AI Study Prediction")
-
-    hours = st.slider("Study Hours",1,10,5)
-
-    predicted = hours * 10
-
-    st.metric("Predicted Marks", f"{predicted}/100")
-
-    if predicted >= 80:
-        st.success("Excellent performance")
-    elif predicted >= 60:
-        st.info("Good performance")
     else:
-        st.warning("Needs practice")
+        st.error(f"{row['Name']} → Weak in Studies")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+# ======================
+# LEADERBOARD
+# ======================
 
-# ===== Feedback =====
-with b3:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
+st.markdown("""
+<div class="neon-box">
+<h1>🏆 Top Student Leaderboard</h1>
+</div>
+""", unsafe_allow_html=True)
 
-    st.markdown("## 💬 Feedback System")
+leaderboard = df.sort_values(by="Average", ascending=False)
 
-    st.text_area("Enter Feedback")
+st.dataframe(leaderboard)
 
-    st.button("🚀 Submit Feedback")
+# ======================
+# CHARTS
+# ======================
 
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<div class="neon-box">
+<h1>📊 Analytics Dashboard</h1>
+</div>
+""", unsafe_allow_html=True)
 
-# ================= AI ANALYSIS =================
-st.markdown("<div class='block'>", unsafe_allow_html=True)
-
-st.markdown("## 🧠 AI Performance Analysis")
-
-selected_student_ai = st.selectbox(
-    "Select Student For AI Analysis",
-    df["Name"],
-    key="ai_analysis_student"
+fig = px.bar(
+    df,
+    x="Name",
+    y="Average",
+    color="Average",
+    title="Student Average Marks"
 )
 
-student_row = df[df["Name"] == selected_student_ai].iloc[0]
+st.plotly_chart(fig, use_container_width=True)
 
-if student_row["Math"] < 50:
-    st.error("❌ Math weak")
+fig2 = px.line(
+    df,
+    x="Name",
+    y="Attendance",
+    markers=True,
+    title="Attendance Analytics"
+)
 
-if student_row["Attendance"] < 75:
-    st.warning("⚠ Needs practice")
+st.plotly_chart(fig2, use_container_width=True)
 
-if student_row["Average"] > 85:
-    st.success("🏆 Excellent performance")
+# ======================
+# ADMIN DASHBOARD
+# ======================
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<div class="neon-box">
+<h1>🛠 Admin Dashboard</h1>
+</div>
+""", unsafe_allow_html=True)
 
-# ================= ADMIN DASHBOARD =================
-st.markdown("<div class='block'>", unsafe_allow_html=True)
+a1,a2,a3,a4 = st.columns(4)
 
-st.markdown("## 🛠 Admin Dashboard")
+with a1:
 
-ad1, ad2, ad3, ad4 = st.columns(4)
-
-with ad1:
     st.markdown("""
-    <div class='metric-card blue'>
-    🏫<br>
-    Total Classes<br><br>
+    <div class="admin-card">
+    <h3>🏫 Total Classes</h3>
     <h1>12</h1>
     </div>
     """, unsafe_allow_html=True)
 
-with ad2:
+with a2:
+
     st.markdown("""
-    <div class='metric-card red'>
-    💰<br>
-    Fees Pending<br><br>
+    <div class="admin-card">
+    <h3>💰 Fees Pending</h3>
     <h1>3</h1>
     </div>
     """, unsafe_allow_html=True)
 
-with ad3:
-    st.markdown("""
-    <div class='metric-card green'>
-    📊<br>
-    Avg Attendance<br><br>
-    <h1>77%</h1>
+with a3:
+
+    st.markdown(f"""
+    <div class="admin-card">
+    <h3>📊 Avg Attendance</h3>
+    <h1>{round(df['Attendance'].mean(),1)}%</h1>
     </div>
     """, unsafe_allow_html=True)
 
-with ad4:
+with a4:
+
     st.markdown("""
-    <div class='metric-card purple'>
-    📅<br>
-    Monthly Analytics<br><br>
+    <div class="admin-card">
+    <h3>🗓 Monthly Analytics</h3>
     <h1>Good</h1>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
+# ======================
+# PDF REPORT
+# ======================
 
-# ================= PDF REPORTS =================
-p1, p2 = st.columns(2)
+st.write("")
+st.write("")
 
-# ===== Attendance PDF =====
+p1,p2 = st.columns(2)
+
 with p1:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
 
-    st.markdown("## 📄 Attendance PDF Report")
+    st.markdown("""
+    <div class="neon-box">
+    <h2>📄 Attendance PDF Report</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.button("Generate Attendance PDF"):
 
         pdf = FPDF()
+
         pdf.add_page()
 
         pdf.set_font("Arial", size=14)
@@ -424,66 +409,135 @@ with p1:
         pdf.cell(200,10,txt="Attendance Report",ln=True)
 
         for i,row in df.iterrows():
+
             pdf.cell(
                 200,
                 10,
-                txt=f"{row['Name']} - Attendance: {row['Attendance']}%",
+                txt=f"{row['Name']} - {row['Attendance']}%",
                 ln=True
             )
 
         pdf.output("attendance_report.pdf")
 
         with open("attendance_report.pdf","rb") as file:
+
             st.download_button(
                 "Download Attendance PDF",
                 file,
                 file_name="attendance_report.pdf"
             )
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ===== Subject Wise PDF =====
 with p2:
-    st.markdown("<div class='block'>", unsafe_allow_html=True)
 
-    st.markdown("## 📘 Subject Wise Marks PDF")
+    st.markdown("""
+    <div class="neon-box">
+    <h2>📘 Subject Wise Marks PDF</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-    selected_student_pdf = st.selectbox(
+    student_option = st.selectbox(
         "Select Student",
         df["Name"],
-        key="subject_pdf_student"
+        key="subject_pdf"
     )
 
     if st.button("Generate Subject PDF"):
 
-        row = df[df["Name"] == selected_student_pdf].iloc[0]
+        student_data = df[df["Name"] == student_option].iloc[0]
 
         pdf = FPDF()
+
         pdf.add_page()
 
         pdf.set_font("Arial", size=14)
 
         pdf.cell(200,10,txt="Subject Wise Report",ln=True)
-        pdf.cell(200,10,txt=f"Student: {row['Name']}",ln=True)
-        pdf.cell(200,10,txt=f"Math: {row['Math']}",ln=True)
-        pdf.cell(200,10,txt=f"Science: {row['Science']}",ln=True)
-        pdf.cell(200,10,txt=f"English: {row['English']}",ln=True)
-        pdf.cell(200,10,txt=f"Average: {row['Average']}",ln=True)
+
+        pdf.cell(200,10,txt=f"Name: {student_data['Name']}",ln=True)
+
+        pdf.cell(200,10,txt=f"Math: {student_data['Math']}",ln=True)
+
+        pdf.cell(200,10,txt=f"Science: {student_data['Science']}",ln=True)
+
+        pdf.cell(200,10,txt=f"English: {student_data['English']}",ln=True)
 
         pdf.output("subject_report.pdf")
 
         with open("subject_report.pdf","rb") as file:
+
             st.download_button(
                 "Download Subject PDF",
                 file,
                 file_name="subject_report.pdf"
             )
 
-    st.markdown("</div>", unsafe_allow_html=True)
+# ======================
+# FORGOT PASSWORD
+# ======================
 
-# ================= FOOTER =================
 st.markdown("""
-<h4 style='text-align:center;margin-top:40px;'>
-© 2025 AI Student System | Made with ❤️ by Shivam Kumar
-</h4>
+<div class="neon-box">
+<h1>🔐 Forgot Password System</h1>
+</div>
+""", unsafe_allow_html=True)
+
+with st.expander("Reset Password"):
+
+    reset_user = st.text_input("Enter Username")
+
+    reset_email = st.text_input("Enter Email")
+
+    otp = st.text_input("Enter OTP")
+
+    new_pass = st.text_input("New Password", type="password")
+
+    if st.button("Send OTP"):
+
+        if reset_user == "admin":
+
+            st.success("✅ OTP Sent")
+
+            st.info("Demo OTP: 1234")
+
+        else:
+
+            st.error("❌ User Not Found")
+
+    if st.button("Reset Password"):
+
+        if otp == "1234":
+
+            st.success("✅ Password Reset Successful")
+
+            st.info(f"New Password: {new_pass}")
+
+        else:
+
+            st.error("❌ Wrong OTP")
+
+# ======================
+# VOICE ASSISTANT
+# ======================
+
+st.markdown("""
+<div class="neon-box">
+<h1>🎤 Voice Assistant</h1>
+<p>"Show Rahul Marks"</p>
+</div>
+""", unsafe_allow_html=True)
+
+voice = st.text_input("Type Voice Command")
+
+if "rahul" in voice.lower():
+
+    st.success(df[df["Name"]=="Rahul"])
+
+# ======================
+# FOOTER
+# ======================
+
+st.markdown("""
+<h3 style='text-align:center;color:#00ffff;'>
+🚀 Ultimate AI Student System Developed By Shivam
+</h3>
 """, unsafe_allow_html=True)
