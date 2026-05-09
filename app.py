@@ -13,6 +13,16 @@ st.set_page_config(
 )
 
 # =========================
+# SESSION STATE
+# =========================
+
+if "saved_password" not in st.session_state:
+    st.session_state.saved_password = "admin123"
+
+if "saved_email" not in st.session_state:
+    st.session_state.saved_email = "admin@gmail.com"
+
+# =========================
 # CUSTOM CSS
 # =========================
 
@@ -95,10 +105,10 @@ font-weight:bold;
 
 data = {
     "Name":["Rahul","Priya","Aman","Sneha","Rohit"],
-    "Attendance":[65,95,70,88,60],
-    "Math":[55,98,45,76,40],
-    "Science":[60,96,50,80,42],
-    "English":[58,92,52,85,45]
+    "Attendance":[90,95,60,85,55],
+    "Math":[88,98,45,82,40],
+    "Science":[90,99,50,84,35],
+    "English":[85,97,55,81,45]
 }
 
 df = pd.DataFrame(data)
@@ -143,14 +153,15 @@ st.write("")
 col1,col2,col3,col4,col5,col6 = st.columns(6)
 
 # =========================
-# FACE LOGIN
+# FACE AUTH
 # =========================
 
 with col1:
 
     st.markdown("""
     <div class="neon-box">
-    <h1>📷 Face Authentication</h1>
+    <h2>📷 Face Authentication</h2>
+    <p>Login with your registered face</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -166,17 +177,24 @@ with col2:
 
     st.markdown("""
     <div class="neon-box">
-    <h1>🔑 Login</h1>
+    <h2>🔑 Manual Login</h2>
     </div>
     """, unsafe_allow_html=True)
 
     username = st.text_input("Username")
 
-    password = st.text_input("Password", type="password")
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
 
     if st.button("Login"):
 
-        if username == "admin" and password == "admin123":
+        if (
+            username == "admin"
+            and
+            password == st.session_state.saved_password
+        ):
 
             st.success("✅ Login Successful")
 
@@ -185,7 +203,7 @@ with col2:
             st.error("❌ Wrong Username or Password")
 
 # =========================
-# DASHBOARD CARDS
+# CARDS
 # =========================
 
 with col3:
@@ -243,11 +261,17 @@ st.markdown("""
 
 with st.expander("Open Forgot Password"):
 
-    forgot_user = st.text_input("Enter Username")
+    forgot_user = st.text_input(
+        "Enter Username"
+    )
 
-    forgot_email = st.text_input("Enter Email")
+    forgot_email = st.text_input(
+        "Enter Email"
+    )
 
-    otp = st.text_input("Enter OTP")
+    otp = st.text_input(
+        "Enter OTP"
+    )
 
     new_password = st.text_input(
         "New Password",
@@ -256,7 +280,11 @@ with st.expander("Open Forgot Password"):
 
     if st.button("Send OTP"):
 
-        if forgot_user == "admin":
+        if (
+            forgot_user == "admin"
+            and
+            forgot_email == st.session_state.saved_email
+        ):
 
             st.success("✅ OTP Sent Successfully")
 
@@ -264,15 +292,21 @@ with st.expander("Open Forgot Password"):
 
         else:
 
-            st.error("❌ User Not Found")
+            st.error("❌ Invalid Username or Email")
 
     if st.button("Reset Password"):
 
         if otp == "1234":
 
-            st.success("✅ Password Reset Successful")
+            st.session_state.saved_password = new_password
 
-            st.info(f"New Password Set: {new_password}")
+            st.success(
+                "✅ Password Reset Successful"
+            )
+
+            st.info(
+                f"New Password Set: {new_password}"
+            )
 
         else:
 
@@ -420,8 +454,6 @@ with a4:
 
 p1,p2 = st.columns(2)
 
-# ATTENDANCE PDF
-
 with p1:
 
     st.markdown("""
@@ -459,8 +491,6 @@ with p1:
                 file_name="attendance_report.pdf"
             )
 
-# SUBJECT PDF
-
 with p2:
 
     st.markdown("""
@@ -471,8 +501,7 @@ with p2:
 
     student_name = st.selectbox(
         "Select Student",
-        df["Name"],
-        key="subjectpdf"
+        df["Name"]
     )
 
     if st.button("Generate Subject PDF"):
